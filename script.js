@@ -87,11 +87,21 @@ function TicTacToe(p1, p2) {
     
     this.makeMove(square.id, currentPlayer.letter);
 
+    if (turn >= 8)
+    {
+      dialog.innerHTML = `<h3>It's a Tie</h3>`
+      dialog.showModal();
+      setTimeout(() => {
+        dialog.close();
+        this.clear();
+        turn = 0;
+        return;
+      }, 2000);
+    }
+
     if (this.checkWinner(currentPlayer.letter))
     {
-      const text = document.createElement('h3');
-      text.textContent = `Winner: ${currentPlayer.name}`;
-      dialog.appendChild(text);
+      dialog.innerHTML = `<h3>Winner: ${currentPlayer.name}</h3>`;
       dialog.showModal();
       setTimeout(() => {
         displayCurrent.textContent = "";
