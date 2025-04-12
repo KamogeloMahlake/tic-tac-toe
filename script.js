@@ -1,144 +1,221 @@
 const container = document.getElementById("container");
-const dialog = document.querySelector("dialog");
-const button = document.getElementById("restart");
-const form = document.querySelector("form");
-const div = document.getElementById("display");
+const twoPlayersButton = document.getElementById("two-players");
+const aiPlayerButton = document.getElementById("ai-player");
+const startBoard = [
+  [null, null, null],
+  [null, null, null],
+  [null, null, null]
+];
 
 
-function TicTacToe(p1, p2) {
-  const matrix = [
-    [],
-    [],
-    []
-  ];
+twoPlayersButton.addEventListener("click", () => {
+  const form = document.createElement("form");
+  form.innerHTML = `<div><input required type="text" placeholder="Player 1(X)" id="player1"/></div>
+                    <div><input required type="text" placeholder="Player 2(O)" id="player2" /></div>
+                    <div><button type="submit">Submit</button></div>`
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const ticTacToe = new TicTacToe(document.getElementById('player1').value, document.getElementById('player2').value);
+    container.innerHTML = '',
+    createSquares(ticTacToe);
+  });
+  container.innerHTML = ``;
+  container.appendChild(form);
+});
 
-  const playerOne = new Player(p1.value, 1, "X");
-  const playerTwo = new Player(p2.value, 2, "O");
-  const span1 = document.getElementById("1");
-  const span2 = document.getElementById("2");
-  span1.textContent = playerOne.name;
-  span2.textContent = playerTwo.name;
+aiPlayerButton.addEventListener("click", () => {
+  container.innerHTML = `<div style="font-weight: bold; font: 3rem"><button id="x" >X</button><button id="o">O</button></div>`;
 
-  const score1 = document.getElementById("s1");
-  const score2 = document.getElementById("s2");
-  score1.textContent = "0";
-  score2.textContent = "0";
+  container.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', () => {
+      return;
+    });
+  });
+});
 
-  const displayCurrent = document.getElementById("turn");
-
-  let turn = 0;
-
-  this.createSquares = function () {
-    for (let i = 0; i < 3; i++)
-    {
-      for (let j = 0; j < 3; j++)
-      {
-        const square = document.createElement("div");
-        square.id = `${i}-${j}`;
-        square.addEventListener('click', () => {
-          if (square.textContent) return;
-          else
-          {
-              this.playGame(square);
-          }
-        });
-        matrix[i].push(square);
-        container.appendChild(square);
-      }
-    }
-  };
-
-
-  this.checkWinner = function (letter) {
-    let diagonalCount = 0;
-    for (let i = 0; i < 3; i++)
-    {
-      let rowCount = 0;
-      let columnCount = 0;
-
-      for (let j = 0; j < 3; j++)
-      {
-        if (matrix[i][j].textContent === letter) rowCount++;
-        if (matrix[j][i].textContent === letter) columnCount++;
-      }
-      if (matrix[i][i].textContent === letter) diagonalCount++;
-      if (rowCount === 3 || columnCount === 3 || diagonalCount === 3) return true;
-    }
-    if (matrix[0][2].textContent === letter && matrix[1][1].textContent === letter && matrix[2][0].textContent === letter) return true;
-    return false;
-  };
-
-  this.clear = function() {
-    for (let i = 0; i < 3; i++)
-    {
-      for (let j = 0; j < 3; j++)
-      {
-        matrix[i][j].textContent = "";
-      }
-    }
-  };
-  this.makeMove = function (id, letter) {
-    const array = id.split("-");
-    matrix[+array[0]][+array[1]].textContent = letter;
+class TicTacToe
+{
+  constructor(one, two)
+  {
+    this.playerOne = 'X';
+    this.playerTwo = 'O';
+    this.playerOneName = one;
+    this.playerTwoName = two;
   }
 
-  this.playGame = function (square) {
-    let currentPlayer = turn % 2 === 0 ? playerOne : playerTwo
-    
-    this.makeMove(square.id, currentPlayer.letter);
-
-    if (turn >= 8)
+  actions(board)
+  {
+    const possibleActions = [];
+    for (let i = 0; i < 3; i++)
     {
-      dialog.innerHTML = `<h3>It's a Tie</h3>`
-      dialog.showModal();
-      setTimeout(() => {
-        dialog.close();
-        this.clear();
-        turn = 0;
-        return;
-      }, 2000);
+      for (let j = 0; j < 3; j++)
+      {
+        if (!board[i][j]) possibleActions.push([i, j]);
+      }
     }
-
-    if (this.checkWinner(currentPlayer.letter))
-    {
-      dialog.innerHTML = `<h3>Winner: ${currentPlayer.name}</h3>`;
-      dialog.showModal();
-      setTimeout(() => {
-        displayCurrent.textContent = "";
-        dialog.close();
-        this.clear();
-        turn = 0;
-        if (currentPlayer.letter === "X") score1.textContent = +score1.textContent + 1;
-        else score2.textContent = +score2.textContent + 1;
-      }, 2000);
-    }
-    else
-    {
-      displayCurrent.textContent = turn % 2 === 0 ? `${playerTwo.name}'s turn (${playerTwo.letter})` : `${playerOne.name}'s turn (${playerOne.letter})`
-    }
-    turn++;
-    
-  };
-}
-
-function Player(name, value, letter)
-{
-  this.name = name;
-  this.value = value;
-  this.letter = letter;
+    return possibleActions;
+  }
   
+  player(board)
+  {
+    return this.actions(board).length % 2 == 0 ? this.playerTwo : this.playerOne;
+  }
+
+  result(board, action)
+  {
+    const copyBoard = JSON.parse(JSON.stringify(this.board));
+    if (!copyBoard[action[0]][action[1]]) copyBoard[action[0]][action[1]] = this.player(copyBoard);
+    return copyBoard;
+  }
+
+  winner(board)
+  {
+    for (let i = 0; i < 3; i++)
+    {
+      //console.log(board[i][0] === board[i][1] === board[i][2]);
+      if (board[i][0] && (board[i][0] === board[i][1] && board[i][0] === board[i][2])) return board[i][0];
+      else if (board[0][i] && (board[0][i] === board[1][i] && board[0][i] === board[2][i])) return board[0][i];
+    }
+    
+    if (board[0][0] === board[1][1] && board[0][0] === board[2][2]) return board[0][0];
+    else if (board[0][2] === board[1][1] && board[0][2] === board[2][0]) return board[0][2];
+
+    return null;
+  } 
+  terminal(board)
+  {
+    if (this.winner(board) || this.actions(board).length === 0) return true;
+    return false;
+  }
+
+  utility(board)
+  {
+    switch (this.winner(board)) 
+    {
+      case this.playerOne:
+        return 1;
+      case this.playerTwo:
+        return -1;
+      default:
+        return 0;
+    }
+  }
+
+  minimax(board)
+  {
+    if (this.terminal(board)) return null;
+    
+    if (this.player(board) === this.playerOne) return this.maxValue(board)[1];
+    return this.minValue(board)[1];
+  }
+
+  minValue(board)
+  {
+    if (terminal(board)) return [this.utility(board), null];
+    let value = 1;
+    let move = null;
+
+    for (const action in this.actions(board))
+    {
+      const [x, _y] = this.maxValue(this.result(board, action));
+
+      if (x < value)
+      {
+        move = action;
+        value = x;
+
+        if (value === -1) break;
+      }
+        
+    }
+    return [value, move];
+  }
+
+  maxValue(board)
+  {
+    if (terminal(board)) return [this.utility(board), null];
+    let value = -1;
+    let move = null;
+
+    for (const action in this.actions(board))
+    {
+      const [x, _y] = this.minValue(this.result(board, action));
+
+      if (x > value)
+      {
+        move = action;
+        value = x;
+
+        if (value === 1) break;
+      }
+        
+    }
+    return [value, move];
+  }
+
+  /*playGame()
+  {
+    let currentPlayer = this.player(board);
+
+  }*/
+
 }
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  form.classList.toggle('hidden');
-  div.classList.toggle('hidden');
+const createSquares = (ticTacToe) => {
+    const grid = document.createElement("div");
+    container.appendChild(grid);
+    grid.id = 'grid';
+    for (let i = 0; i < 3; i++)
+    {
+      for (let j = 0; j < 3; j++)
+      {
+        const square = document.createElement("button");
+        square.id = `${i}-${j}`;
+        square.className = 'grid-button';
+        square.addEventListener('click', () => {
+          if (square.textContent) return;
+          
+          square.textContent = ticTacToe.player(startBoard);
+          startBoard[i][j] = ticTacToe.player(startBoard);
+          if (ticTacToe.terminal(startBoard))
+          {
+            const dialog = document.createElement('dialog');
+            dialog.close();
+            dialog.innerHTML = `<button class='close'>Close</button>`
+            
+            switch (ticTacToe.winner(startBoard))
+            {
+              case 'X':
+                dialog.innerHTML += `<h3>Winner: ${ticTacToe.playerOneName}</h3>`;
+                break;
+              case 'O':
+                dialog.innerHTML += `<h3>Winner: ${ticTacToe.playerTwoName}</h3>`;
+                break;
+              default:
+                dialog.innerHTML += `<h3>GAMEOVER: It's a Tie!!!</h3>`;
+                break;
+            } 
+          document.querySelector('center').appendChild(dialog);
+            
+          dialog.showModal();
+          dialog.querySelector('.close').addEventListener('click', () => document.querySelector('center').removeChild(dialog));
+          setTimeout(() => clearBoard(), 2000);
+          }
+        });
+        //matrix[i].push(square);
+        grid.appendChild(square);
+      }
+    }
+};
 
-  const playerOne = document.getElementById("player1");
-  const playerTwo = document.getElementById("player2");
+const clearBoard = () => {
+  for (let i = 0; i < 3; i++)
+  {
+    startBoard[i][0] = null;
+    startBoard[i][1] = null;
+    startBoard[i][2] = null;
+  }
+  const buttons = document.querySelectorAll('.grid-button');
+  buttons.forEach(button => button.textContent = '');
 
-  const game = new TicTacToe(playerOne, playerTwo);
-  game.createSquares();
-  button.addEventListener('click', game.clear)
-
-})
+};

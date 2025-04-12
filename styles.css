@@ -1,9 +1,4 @@
-body 
-{
-  background-color: grey;
-
-}
-#container 
+#grid
 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -14,23 +9,5 @@ body
 
 }
 
-#container div
-{
-  border: 1px solid black;
-  text-align: center;
-  width: 3.33rem;
-  height: 3.33rem;
-  line-height: 3.33rem;
-  background-color: white;
-  color: red;
-  font : "Times New Roman", sans-serif;
-}
-.hidden 
-{
-  display: none;
 
-}
-span
-{
-  color: white;
-}
+
