@@ -27,8 +27,51 @@ aiPlayerButton.addEventListener("click", () => {
   container.innerHTML = `<div style="font-weight: bold; font: 3rem"><button id="x" >X</button><button id="o">O</button></div>`;
 
   container.querySelectorAll('button').forEach(button => {
-    button.addEventListener('click', () => {
-      return;
+    button.addEventListener('click', async () => {
+      let playerOne = "human";
+      let playerTwo = "ai";
+      
+      switch (button.id) 
+      {
+        case "o":
+          playerOne = "ai";
+          playerTwo = "human";
+          break;
+
+        default:
+          break;
+      }
+      container.innerHTML = ""
+      const ticTacToe = new TicTacToe(playerOne, playerTwo);
+      const grid = document.createElement("div");
+      grid.id = "grid";
+
+      container.appendChild(grid);
+
+      if (ticTacToe.playerOneName === 'ai')
+      {
+        let action = await ticTacToe.minimax(startBoard);
+        square[action[0]][action[1]] =  "X";
+      }
+
+      for (let i = 0; i < 3; i++)
+      {
+        for (let j = 0; j < 3; j++)
+        {
+          const square = document.createElement("button");
+          square.className = "grid-button";
+          container.appendChild(square);
+          if (startBoard[i][j]) square.textContent = startBoard[i][j];
+          square.addEventListener('click', () => {
+            if (square.textContent) return;
+
+            square.textContent = ticTacToe.player(startBoard);
+            startBoard[i][j] = ticTacToe.player(startBoard);
+            action = ticTacToe.minimax(startBoard);
+            square[action[0]][action[1]] = ticTacToe.player(startBoard);
+          });
+        }
+      }
     });
   });
 });
@@ -41,6 +84,8 @@ class TicTacToe
     this.playerTwo = 'O';
     this.playerOneName = one;
     this.playerTwoName = two;
+    this.playerOneScore = 0;
+    this.playerTwoScore = 0;
   }
 
   actions(board)
@@ -63,7 +108,7 @@ class TicTacToe
 
   result(board, action)
   {
-    const copyBoard = JSON.parse(JSON.stringify(this.board));
+    const copyBoard = JSON.parse(JSON.stringify(board));
     if (!copyBoard[action[0]][action[1]]) copyBoard[action[0]][action[1]] = this.player(copyBoard);
     return copyBoard;
   }
@@ -111,7 +156,7 @@ class TicTacToe
 
   minValue(board)
   {
-    if (terminal(board)) return [this.utility(board), null];
+    if (this.terminal(board)) return [this.utility(board), null];
     let value = 1;
     let move = null;
 
@@ -133,7 +178,7 @@ class TicTacToe
 
   maxValue(board)
   {
-    if (terminal(board)) return [this.utility(board), null];
+    if (this.terminal(board)) return [this.utility(board), null];
     let value = -1;
     let move = null;
 
@@ -152,19 +197,17 @@ class TicTacToe
     }
     return [value, move];
   }
-
-  /*playGame()
-  {
-    let currentPlayer = this.player(board);
-
-  }*/
-
 }
 
 const createSquares = (ticTacToe) => {
+    const currentPlayer = document.createElement("h3");
+    container.appendChild(currentPlayer);
+    currentPlayer.textContent = `X's turn`;
+    
     const grid = document.createElement("div");
     container.appendChild(grid);
     grid.id = 'grid';
+    
     for (let i = 0; i < 3; i++)
     {
       for (let j = 0; j < 3; j++)
@@ -177,6 +220,8 @@ const createSquares = (ticTacToe) => {
           
           square.textContent = ticTacToe.player(startBoard);
           startBoard[i][j] = ticTacToe.player(startBoard);
+          
+          currentPlayer.textContent = `${ticTacToe.player(startBoard)}'s turn`
           if (ticTacToe.terminal(startBoard))
           {
             const dialog = document.createElement('dialog');
@@ -186,26 +231,42 @@ const createSquares = (ticTacToe) => {
             switch (ticTacToe.winner(startBoard))
             {
               case 'X':
-                dialog.innerHTML += `<h3>Winner: ${ticTacToe.playerOneName}</h3>`;
+                ticTacToe.playerOneScore++;
+                dialog.innerHTML += `<h3>Winner: ${ticTacToe.playerOneName}</h3><div>`;
                 break;
               case 'O':
+                ticTacToe.playerTwoScore++;
                 dialog.innerHTML += `<h3>Winner: ${ticTacToe.playerTwoName}</h3>`;
                 break;
               default:
                 dialog.innerHTML += `<h3>GAMEOVER: It's a Tie!!!</h3>`;
                 break;
-            } 
+            }
+          dialog.innerHTML += `<div>
+<h6><strong>${ticTacToe.playerOneName} Score: </strong>${ticTacToe.playerOneScore}</h6>
+<h6><strong>${ticTacToe.playerTwoName} Score: <strong>${ticTacToe.playerTwoScore}</h6>
+</div>`
           document.querySelector('center').appendChild(dialog);
             
           dialog.showModal();
           dialog.querySelector('.close').addEventListener('click', () => document.querySelector('center').removeChild(dialog));
-          setTimeout(() => clearBoard(), 2000);
+          setTimeout(() => {
+            clearBoard();
+            currentPlayer.textContent = `${ticTacToe.player(startBoard)}'s turn`
+          }, 2000);
           }
         });
-        //matrix[i].push(square);
         grid.appendChild(square);
       }
     }
+  const resetButton = document.createElement("button");
+  resetButton.textContent = "Reset";
+  resetButton.id = "reset";
+  container.appendChild(resetButton);
+  document.getElementById("reset").addEventListener("click", () => {
+    clearBoard();
+    currentPlayer.textContent = `${ticTacToe.player(startBoard)}'s turn`;
+  });
 };
 
 const clearBoard = () => {
@@ -217,5 +278,5 @@ const clearBoard = () => {
   }
   const buttons = document.querySelectorAll('.grid-button');
   buttons.forEach(button => button.textContent = '');
-
+  
 };
